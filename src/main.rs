@@ -43,23 +43,18 @@ fn is_request_allowed(username: &str, state: &ChatState) -> bool {
     let mut timestamps = state.user_request_timestamps.lock().unwrap();
     let current_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
 
-    // Check if the user exists in the map
     if let Some((last_request_time, request_count)) = timestamps.get_mut(username) {
         if current_time - *last_request_time > TIME_WINDOW {
-            // Reset the count if the time window has passed
             *last_request_time = current_time;
             *request_count = 1;
             true
         } else if *request_count < REQUEST_LIMIT {
-            // Allow request if the count is within the limit
             *request_count += 1;
             true
         } else {
-            // Deny the request as the user exceeded the limit
             false
         }
     } else {
-        // First request from the user
         timestamps.insert(username.to_string(), (current_time, 1));
         true
     }
@@ -67,20 +62,16 @@ fn is_request_allowed(username: &str, state: &ChatState) -> bool {
 
 // Function to check if the message is valid (length and uniqueness)
 fn is_message_valid(message: &str, state: &ChatState) -> bool {
-    // Check for message length
     if message.len() > MAX_MESSAGE_LENGTH {
         return false;
     }
 
-    // Check if the message is unique
     let mut recent_messages = state.recent_messages.lock().unwrap();
     if recent_messages.contains(message) {
         return false;
     }
 
-    // Message is unique, so add it to the recent messages
     if recent_messages.len() >= RECENT_MESSAGE_LIMIT {
-        // If the set is full, remove the oldest message (for simplicity, we clear the set)
         recent_messages.clear();
     }
     recent_messages.insert(message.to_string());
@@ -93,7 +84,6 @@ fn is_message_valid(message: &str, state: &ChatState) -> bool {
 fn index(username: Option<String>, state: &State<ChatState>) -> RawHtml<String> {
     let messages = state.messages.lock().unwrap();
 
-    // Render the HTML with all the chat messages
     let mut html = String::from(
         r#"
         <!DOCTYPE html>
@@ -121,9 +111,12 @@ fn index(username: Option<String>, state: &State<ChatState>) -> RawHtml<String> 
                     flex: 1;
                     background-color: #1e1e1e;
                     padding: 15px;
+                    padding-bottom: 80px; /* Extra padding to prevent form overlap */
                     border-radius: 8px;
                     margin-bottom: 20px;
                     overflow-y: auto;
+                    display: flex;
+                    flex-direction: column-reverse; /* Show latest messages at the bottom */
                 }
                 #messages p {
                     background-color: #2e2e2e;
@@ -131,6 +124,7 @@ fn index(username: Option<String>, state: &State<ChatState>) -> RawHtml<String> 
                     padding: 10px;
                     margin-bottom: 10px;
                     border-radius: 6px;
+                    flex-shrink: 0;
                 }
                 #chat-form {
                     background-color: #1c1c1c;
@@ -140,6 +134,7 @@ fn index(username: Option<String>, state: &State<ChatState>) -> RawHtml<String> 
                     bottom: 0;
                     left: 0;
                     width: 100%;
+                    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.5);
                 }
                 input[type="text"] {
                     border-radius: 6px;
@@ -151,7 +146,7 @@ fn index(username: Option<String>, state: &State<ChatState>) -> RawHtml<String> 
                     border: 1px solid #555;
                 }
                 input[type="submit"] {
-                    background-color: #007bff;
+                    background-color: #007bff; /* Blue button */
                     color: white;
                     border: none;
                     cursor: pointer;
@@ -159,9 +154,10 @@ fn index(username: Option<String>, state: &State<ChatState>) -> RawHtml<String> 
                     padding: 10px;
                     margin-top: 5px;
                     width: 100%;
+                    transition: background-color 0.3s ease;
                 }
                 input[type="submit"]:hover {
-                    background-color: #0056b3;
+                    background-color: #0056b3; /* Darker blue on hover */
                 }
             </style>
         </head>
@@ -173,7 +169,6 @@ fn index(username: Option<String>, state: &State<ChatState>) -> RawHtml<String> 
         "#,
     );
 
-    // Add each message to the HTML
     for msg in messages.iter() {
         html.push_str(&format!(
             "<p><strong>{}</strong>: {}</p>",
@@ -202,35 +197,28 @@ fn index(username: Option<String>, state: &State<ChatState>) -> RawHtml<String> 
     let username_value = username.unwrap_or_else(|| "".to_string());
     let final_html = html.replace("USERNAME_PLACEHOLDER", &username_value);
 
-    RawHtml(final_html)  // Return the rendered HTML
+    RawHtml(final_html)
 }
-
 
 // Send message route with rate limiting, message length, and uniqueness check
 #[post("/send", data = "<message_form>")]
 fn send(message_form: Form<ChatMessage>, state: &State<ChatState>) -> Result<Redirect, RawHtml<String>> {
-    // Check if the request is allowed (rate limiting)
     if !is_request_allowed(&message_form.username, state.inner()) {
         return Err(RawHtml("Too many requests. Please wait and try again.".to_string()));
     }
 
-    // Check if the message is valid (length and uniqueness)
     if !is_message_valid(&message_form.message, state.inner()) {
         return Err(RawHtml("Message is either too long or has already been sent.".to_string()));
     }
 
-    // Introduce a delay of 3 seconds before processing the message
     thread::sleep(Duration::from_secs(3));
 
     let mut messages = state.messages.lock().unwrap();
-    
-    // Add the new message to the state
     messages.push(Message {
         username: message_form.username.clone(),
         content: message_form.message.clone(),
     });
 
-    // Redirect back to the index page with the username
     Ok(Redirect::to(format!("/?username={}", urlencoding::encode(&message_form.username))))
 }
 
@@ -240,8 +228,8 @@ fn rocket() -> _ {
     rocket::build()
         .manage(ChatState {
             messages: Mutex::new(Vec::new()),
-            user_request_timestamps: Mutex::new(HashMap::new()), // Initialize empty timestamp map
-            recent_messages: Mutex::new(HashSet::new()), // Initialize empty set for recent messages
+            user_request_timestamps: Mutex::new(HashMap::new()),
+            recent_messages: Mutex::new(HashSet::new()),
         })
         .mount("/", routes![index, send])
 }

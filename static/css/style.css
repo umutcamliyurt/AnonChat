@@ -14,24 +14,32 @@
 
 /* Styles for the scrollable chat container */
 #chat-container {
-    height: calc(100vh - 200px); /* Adjust height based on viewport */
-    overflow-y: auto;  /* Enable vertical scrolling */
+    height: calc(100vh - 250px); /* Adjusted height */
+    overflow-y: auto; /* Enable vertical scrolling */
     border: 1px solid var(--border-color);
     padding: 15px;
+    padding-bottom: 80px; /* Extra bottom padding to avoid being blocked by form */
     background-color: var(--bg-color);
-    margin-bottom: 60px; /* Space for the fixed form */
     color: var(--text-color);
     border-radius: 8px;
     box-shadow: 0 4px 8px var(--shadow-color);
+    display: flex;
+    flex-direction: column-reverse; /* Show latest messages at the bottom */
 }
 
 /* Style each message in the chat */
+#messages {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 #messages p {
     background-color: var(--input-bg-color);
     border-left: 4px solid var(--button-bg-color);
     padding: 10px;
-    margin-bottom: 10px;
     border-radius: 6px;
+    flex-shrink: 0; /* Prevent messages from shrinking */
 }
 
 /* Position the form fixed at the bottom of the page */
@@ -43,6 +51,7 @@
     background-color: var(--form-bg-color);
     border-top: 1px solid var(--border-color);
     padding: 15px;
+    padding-top: 10px; /* Reduce top padding */
     box-shadow: 0 -4px 10px var(--shadow-color);
     display: flex;
     flex-direction: column;
@@ -82,4 +91,19 @@
 #chat-form input[type="submit"]:hover {
     background-color: var(--button-bg-hover);
     box-shadow: 0 4px 6px var(--shadow-color);
+}
+
+/* Responsive styling for mobile */
+@media (max-width: 600px) {
+    #chat-container {
+        padding: 10px;
+        padding-bottom: 100px; /* Extra padding for mobile to prevent form overlap */
+        height: calc(100vh - 300px); /* Additional height adjustment for mobile */
+    }
+    
+    #chat-form input[type="text"],
+    #chat-form input[type="submit"] {
+        padding: 10px; /* Smaller padding for mobile */
+        font-size: 14px; /* Reduced font size */
+    }
 }
