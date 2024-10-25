@@ -1,0 +1,85 @@
+/* Root styles with CSS variables for theme */
+:root {
+    --bg-color: #000000;
+    --text-color: #e0e0e0;
+    --input-bg-color: #1e1e1e;
+    --input-border-color: #333;
+    --form-bg-color: #1c1c1c;
+    --button-bg-color: #00c853;
+    --button-bg-hover: #00e676;
+    --button-text-color: #ffffff;
+    --border-color: #333;
+    --shadow-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Styles for the scrollable chat container */
+#chat-container {
+    height: calc(100vh - 200px); /* Adjust height based on viewport */
+    overflow-y: auto;  /* Enable vertical scrolling */
+    border: 1px solid var(--border-color);
+    padding: 15px;
+    background-color: var(--bg-color);
+    margin-bottom: 60px; /* Space for the fixed form */
+    color: var(--text-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 8px var(--shadow-color);
+}
+
+/* Style each message in the chat */
+#messages p {
+    background-color: var(--input-bg-color);
+    border-left: 4px solid var(--button-bg-color);
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+}
+
+/* Position the form fixed at the bottom of the page */
+#chat-form {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--form-bg-color);
+    border-top: 1px solid var(--border-color);
+    padding: 15px;
+    box-shadow: 0 -4px 10px var(--shadow-color);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Input fields */
+#chat-form input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    margin: 0;
+    border: 1px solid var(--input-border-color);
+    background-color: var(--input-bg-color);
+    color: var(--text-color);
+    border-radius: 6px;
+    font-size: 16px;
+    transition: border 0.3s ease;
+}
+
+#chat-form input[type="text"]:focus {
+    border-color: var(--button-bg-color);
+    outline: none;
+}
+
+/* Submit button */
+#chat-form input[type="submit"] {
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#chat-form input[type="submit"]:hover {
+    background-color: var(--button-bg-hover);
+    box-shadow: 0 4px 6px var(--shadow-color);
+}
